@@ -1,0 +1,215 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: notes
+    description: Student note sharing operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /notes:
+    get:
+      operationId: listNotes
+      tags: [notes]
+      summary: List shared notes
+      description: Returns published student notes with optional search and category filters.
+      parameters:
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [all, story, poem, chapter, other]
+            default: all
+        - name: sort
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [recent, popular]
+            default: recent
+      responses:
+        "200":
+          description: Notes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Note"
+    post:
+      operationId: createNote
+      tags: [notes]
+      summary: Share a new note
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NoteInput"
+      responses:
+        "201":
+          description: Created note
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+        "400":
+          description: Invalid note
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /notes/{id}:
+    get:
+      operationId: getNote
+      tags: [notes]
+      summary: Get a shared note
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Note
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+        "404":
+          description: Note not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /notes/{id}/like:
+    post:
+      operationId: likeNote
+      tags: [notes]
+      summary: Like a shared note
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Updated note like state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LikeResponse"
+        "404":
+          description: Note not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    Note:
+      type: object
+      required:
+        - id
+        - title
+        - category
+        - subject
+        - content
+        - authorName
+        - authorInitials
+        - likes
+        - createdAt
+      properties:
+        id:
+          type: number
+        title:
+          type: string
+        category:
+          type: string
+          enum: [story, poem, chapter, other]
+        subject:
+          type: string
+        content:
+          type: string
+        authorName:
+          type: string
+        authorInitials:
+          type: string
+        likes:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+    NoteInput:
+      type: object
+      required:
+        - title
+        - category
+        - subject
+        - content
+        - authorName
+      properties:
+        title:
+          type: string
+          minLength: 2
+        category:
+          type: string
+          enum: [story, poem, chapter, other]
+        subject:
+          type: string
+          minLength: 2
+        content:
+          type: string
+          minLength: 10
+        authorName:
+          type: string
+          minLength: 2
+    LikeResponse:
+      type: object
+      required:
+        - likes
+      properties:
+        likes:
+          type: number
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+

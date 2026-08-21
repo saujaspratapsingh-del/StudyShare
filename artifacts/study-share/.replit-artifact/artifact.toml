@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "StudyShare"
+description = "A student notes-sharing website where learners can discover, publish, like, and download study materials including stories, poems, and textbook chapters."
+version = "1.0.0"
+id = "artifacts/study-share"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23551
+
+[services.development]
+run = "pnpm --filter @workspace/study-share run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/study-share", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/study-share/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23551"
+BASE_PATH = "/"
